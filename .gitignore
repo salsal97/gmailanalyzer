@@ -1,1 +1,11 @@
+# Gmail API Extras
+credentials.json
+token.pickle
+
+# Log files
 log/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
