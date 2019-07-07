@@ -1,4 +1,4 @@
-# gmailanalyzer
+# Gmailanalyzer - Take Control of your Inbox
 
 Get a count for the number of emails sent by each sender: Using Gmail API by Google
 
