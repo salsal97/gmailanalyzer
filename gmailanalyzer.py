@@ -53,8 +53,11 @@ def main():
     # file2.write("From"+delimiter+"Count\n")
 
     conn = create_db(database_name)
-    cursor = create_table(table_name, field_names)
-
+    cursor = cursor_to_db(conn)
+    create_table(conn, table_name, field_names)
+    if (not cursor):
+        print("CURSOR IS NULL??????")
+        exit()
     for msg in messages:
         if (i%one_tenth == 0):
             i = 0
@@ -70,18 +73,26 @@ def main():
         i = i + 1
         sender = msg['payload']['headers'][0]['value']
 
-        # if the sender exists
-        if (cursor.execute("SELECT ? FROM ? WHERE ? = ?", field_names[0], table_name, field_names[0], sender))
-            # senderDict.add(sender)
-            emails_from_sender = query_for_emails(service,"from:"+sender)
-            num = len(emails_from_sender)
-            count = count + num
-            line = sender + delimiter + str(num)+"\n"
-            # file2.write(line)
+        # get cardinality if sender exists
+        cardinality = cursor.execute("SELECT ? FROM ? WHERE ? = ?", field_names[1], table_name, field_names[0], sender).fetchall()
+
+        # Sender does not exist
+        if (not cardinality):
+            values = [sender, 1]
+            add_values(cursor, table_name, values)
         else:
-            continue
+        # Sender exists
+            num = cardinality[0][0]+1
+            cursor.execute("UPDATE ? SET ? = ? WHERE ? = ?",table_name,field_names[1],num,field_names[0],sender)
+            # senderDict.add(sender)
+            # emails_from_sender = query_for_emails(service,"from:"+sender)
+            # num = len(emails_from_sender)
+            # count = count + num
+            # line = sender + delimiter + str(num)+"\n"
+            # file2.write(line)
     # json.dump(senderDict, file2, indent=4)
     # file2.close()
+    print_table(cursor, table_name)
 
 if __name__ == '__main__':
     main()
