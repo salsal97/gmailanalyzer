@@ -1,5 +1,6 @@
 from gmailutils import setup, query_for_emails, user_id
 from logger import create_log
+from my_sql import *
 import json
 import base64
 import sys
@@ -11,6 +12,10 @@ log_suffix = '.json'
 log_csv_suffix = '.csv'
 service = setup()
 delimiter = ", "
+
+database_name = "Gmailanalyzer.db"
+table_name = "sender_cardinality"
+field_names = ["sender","cardinality"]
 
 def get_emails_json():
     # check for token.pickle, setup service; Get all mail
@@ -33,18 +38,22 @@ def main():
     # filename = get_emails_json()
     # print("Results printed to "+filename)
 
-    filename = "log/gmail_analyzer_2019-07-01_2245.json"
+    filename = "log/gmail_analyzer_2019-07-12_2314.json"
     file = open(filename,"r")
     messages = json.load(file)
-    total = len(messages)/10
+    total = len(messages)
     one_tenth = total/50
 
-    senderDict = set()
+    # senderDict = set()
     i = 0
     count = 0
 
-    file2 = create_log(log_prefix, log_csv_suffix)
-    file2.write("From"+delimiter+"Count\n")
+    # DEPRECATING FILE IO BECAUSE REAL DEVELOPERS USE DATABASES
+    # file2 = create_log(log_prefix, log_csv_suffix)
+    # file2.write("From"+delimiter+"Count\n")
+
+    conn = create_db(database_name)
+    cursor = create_table(table_name, field_names)
 
     for msg in messages:
         if (i%one_tenth == 0):
@@ -60,17 +69,19 @@ def main():
 
         i = i + 1
         sender = msg['payload']['headers'][0]['value']
-        if sender not in senderDict:
-            senderDict.add(sender)
+
+        # if the sender exists
+        if (cursor.execute("SELECT ? FROM ? WHERE ? = ?", field_names[0], table_name, field_names[0], sender))
+            # senderDict.add(sender)
             emails_from_sender = query_for_emails(service,"from:"+sender)
             num = len(emails_from_sender)
             count = count + num
             line = sender + delimiter + str(num)+"\n"
-            file2.write(line)
+            # file2.write(line)
         else:
             continue
     # json.dump(senderDict, file2, indent=4)
-    file2.close()
+    # file2.close()
 
 if __name__ == '__main__':
     main()
